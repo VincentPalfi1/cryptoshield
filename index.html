@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CryptoShield — Wallet Risk Intelligence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080c10;
+      --surface:   #0d1117;
+      --border:    #1a2230;
+      --border-hi: #243040;
+      --text:      #c9d6e3;
+      --text-dim:  #5a7080;
+      --text-hi:   #e8f0f8;
+      --accent:    #00d4ff;
+      --accent-dim:#00d4ff22;
+      --red:       #ff3b5c;
+      --red-dim:   #ff3b5c22;
+      --yellow:    #ffb347;
+      --yellow-dim:#ffb34722;
+      --green:     #00e5a0;
+      --green-dim: #00e5a022;
+      --mono:      'Space Mono', monospace;
+      --sans:      'DM Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Grid overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Noise texture ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Layout ── */
+    .wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Header ── */
+    header {
+      position: relative;
+      z-index: 1;
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+    }
+
+    header .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 32px; height: 32px;
+      border: 1.5px solid var(--accent);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--accent);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-icon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent-dim);
+    }
+
+    .logo-name {
+      font-family: var(--mono);
+      font-size: 16px;
+      color: var(--text-hi);
+      letter-spacing: 0.05em;
+    }
+
+    .logo-name span { color: var(--accent); }
+
+    .header-badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeUp .6s .1s forwards;
+    }
+
+    .hero h1 {
+      font-family: var(--mono);
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 700;
+      color: var(--text-hi);
+      line-height: 1.15;
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp .6s .2s forwards;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      max-width: 540px;
+      margin: 0 auto 48px;
+      color: var(--text-dim);
+      font-size: 15px;
+      line-height: 1.7;
+      opacity: 0;
+      animation: fadeUp .6s .3s forwards;
+    }
+
+    /* ── Badges ── */
+    .badges {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 56px;
+      opacity: 0;
+      animation: fadeUp .6s .4s forwards;
+    }
+
+    .badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      padding: 5px 12px;
+      border-radius: 3px;
+      border: 1px solid var(--border-hi);
+      color: var(--text-dim);
+      background: var(--surface);
+    }
+
+    /* ── Search box ── */
+    .search-box {
+      max-width: 680px;
+      margin: 0 auto;
+      opacity: 0;
+      animation: fadeUp .6s .5s forwards;
+    }
+
+    .search-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border-hi);
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--surface);
+      transition: border-color .2s;
+    }
+
+    .search-row:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .search-prefix {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text-dim);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      border-right: 1px solid var(--border);
+      background: var(--bg);
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    #walletInput {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 16px 18px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text-hi);
+      width: 100%;
+    }
+
+    #walletInput::placeholder { color: var(--text-dim); }
+
+    #analyzeBtn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 16px 28px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: opacity .15s, transform .1s;
+      white-space: nowrap;
+    }
+
+    #analyzeBtn:hover { opacity: 0.85; }
+    #analyzeBtn:active { transform: scale(.98); }
+    #analyzeBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── API key row ── */
+    .api-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+      opacity: 0;
+      animation: fadeUp .6s .6s forwards;
+    }
+
+    .api-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    #apiKeyInput {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      outline: none;
+      padding: 8px 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      transition: border-color .2s;
+    }
+
+    #apiKeyInput:focus { border-color: var(--accent); }
+    #apiKeyInput::placeholder { color: var(--text-dim); }
+
+    /* ── Status bar ── */
+    #statusBar {
+      display: none;
+      max-width: 680px;
+      margin: 20px auto 0;
+      padding: 12px 16px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #statusBar.hidden { display: none !important; }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid var(--border-hi);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* ── Result panel ── */
+    #result {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto 80px;
+      padding: 0 24px;
+      display: none;
+    }
+
+    #result.visible { display: block; animation: fadeUp .5s forwards; }
+
+    .result-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .verdict-block { display: flex; align-items: center; gap: 16px; }
+
+    .verdict-icon {
+      width: 52px; height: 52px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .verdict-icon.critical { background: var(--red-dim); border: 1px solid var(--red); }
+    .verdict-icon.high     { background: var(--red-dim); border: 1px solid var(--red); }
+    .verdict-icon.medium   { background: var(--yellow-dim); border: 1px solid var(--yellow); }
+    .verdict-icon.low      { background: var(--green-dim); border: 1px solid var(--green); }
+
+    .verdict-text h2 {
+      font-family: var(--mono);
+      font-size: 22px;
+      color: var(--text-hi);
+      line-height: 1.2;
+    }
+
+    .verdict-text p {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 4px;
+      font-family: var(--mono);
+    }
+
+    .score-block { text-align: right; }
+
+    .score-number {
+      font-family: var(--mono);
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .score-number.critical, .score-number.high { color: var(--red); }
+    .score-number.medium   { color: var(--yellow); }
+    .score-number.low      { color: var(--green); }
+
+    .score-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      margin-top: 4px;
+    }
+
+    /* ── Score bar ── */
+    .score-bar-wrap {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+    }
+
+    .score-bar-fill.critical, .score-bar-fill.high { background: var(--red); }
+    .score-bar-fill.medium   { background: var(--yellow); }
+    .score-bar-fill.low      { background: var(--green); }
+
+    /* ── Panels grid ── */
+    .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    @media (max-width: 640px) { .panels { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .panel-full { grid-column: 1 / -1; }
+
+    .panel-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .stat-row:last-child { border-bottom: none; }
+    .stat-key { color: var(--text-dim); font-size: 12px; }
+    .stat-val { font-family: var(--mono); font-size: 12px; color: var(--text-hi); }
+
+    /* ── Findings list ── */
+    .finding {
+      padding: 12px 14px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      border-left: 3px solid transparent;
+      background: var(--bg);
+    }
+
+    .finding:last-child { margin-bottom: 0; }
+
+    .finding.sanctioned { border-left-color: var(--red); }
+    .finding.high_risk  { border-left-color: var(--yellow); }
+    .finding.medium_risk{ border-left-color: var(--text-dim); }
+    .finding.behavior   { border-left-color: var(--yellow); }
+
+    .finding-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+    }
+
+    .finding-label {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-hi);
+    }
+
+    .finding-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      letter-spacing: 0.08em;
+    }
+
+    .finding-tag.sanctioned { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+    .finding-tag.high       { background: var(--yellow-dim); color: var(--yellow); border: 1px solid var(--yellow); }
+    .finding-tag.medium     { background: var(--border); color: var(--text-dim); border: 1px solid var(--border-hi); }
+
+    .finding-detail {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    /* ── Recommendation box ── */
+    .recommendation {
+      padding: 16px 20px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .recommendation.critical, .recommendation.high {
+      border-color: var(--red);
+      background: var(--red-dim);
+    }
+
+    .recommendation.medium {
+      border-color: var(--yellow);
+      background: var(--yellow-dim);
+    }
+
+    .recommendation.low {
+      border-color: var(--green);
+      background: var(--green-dim);
+    }
+
+    /* ── Disclaimer ── */
+    .disclaimer {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.6;
+      font-family: var(--mono);
+    }
+
+    /* ── Empty state ── */
+    .empty {
+      padding: 20px 0;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    /* ── Error panel ── */
+    #errorBox {
+      display: none;
+      max-width: 680px;
+      margin: 16px auto 0;
+      padding: 14px 18px;
+      border: 1px solid var(--red);
+      border-radius: 6px;
+      background: var(--red-dim);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--red);
+    }
+
+    #errorBox.visible { display: block; }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Hop badge ── */
+    .hop-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 3px;
+      background: var(--border);
+      color: var(--text-dim);
+      margin-right: 8px;
+    }
+
+    /* ── Features Section ── */
+    .features-section {
+      position: relative; z-index: 1;
+      padding: 0 0 80px;
+    }
+
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      margin-bottom: 48px;
+      overflow: hidden;
+    }
+
+    .stat-item {
+      flex: 1;
+      text-align: center;
+      padding: 28px 16px;
+    }
+
+    .stat-big {
+      font-family: var(--mono);
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-desc {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 40px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 56px;
+    }
+
+    @media (max-width: 700px) {
+      .feature-grid { grid-template-columns: 1fr; }
+      .stats-bar { flex-wrap: wrap; }
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 22px 20px;
+      transition: border-color .2s, transform .2s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-hi);
+      transform: translateY(-2px);
+    }
+
+    .feature-icon { font-size: 22px; margin-bottom: 12px; }
+
+    .feature-title {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-hi);
+      margin-bottom: 10px;
+    }
+
+    .feature-body {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.65;
+      margin-bottom: 14px;
+    }
+
+    .feature-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .ftag {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      padding: 3px 8px;
+      border-radius: 3px;
+      border: 1px solid var(--border-hi);
+      color: var(--text-dim);
+      background: var(--bg);
+    }
+
+    /* ── How it works ── */
+    .how-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      color: var(--text-dim);
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .how-steps {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    @media (max-width: 640px) {
+      .how-steps { flex-direction: column; }
+      .how-arrow { transform: rotate(90deg); align-self: center; }
+    }
+
+    .how-step {
+      flex: 1;
+      max-width: 260px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 22px 20px;
+      display: flex;
+      gap: 14px;
+    }
+
+    .how-num {
+      font-family: var(--mono);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--border-hi);
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .how-step-title {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
+
+    .how-step-body {
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .how-arrow {
+      font-family: var(--mono);
+      font-size: 20px;
+      color: var(--border-hi);
+      margin-top: 28px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="wrap">
+    <div class="logo">
+      <div class="logo-icon">CS</div>
+      <span class="logo-name">Crypto<span>Shield</span></span>
+    </div>
+    <div class="header-badge">INTELLIGENCE PLATFORM v2.1</div>
+  </div>
+</header>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="wrap">
+    <p class="hero-eyebrow">AML · KYC · Sanctions Screening</p>
+    <h1>Wallet Risk Intelligence<br/>for <em>Compliance Teams</em></h1>
+    <p class="hero-sub">
+      Instantly screen any Ethereum wallet against OFAC sanctions lists,
+      trace multi-hop transaction graphs, and detect behavioral AML patterns.
+    </p>
+
+    <div class="badges">
+      <span class="badge">OFAC SDN LIST</span>
+      <span class="badge">EU CONSOLIDATED</span>
+      <span class="badge">MULTI-HOP GRAPH</span>
+      <span class="badge">BEHAVIORAL ANALYSIS</span>
+      <span class="badge">MiCA READY</span>
+    </div>
+
+    <div class="search-box">
+      <label class="search-label" for="walletInput">Ethereum Wallet Address</label>
+      <div class="search-row">
+        <span class="search-prefix">ETH</span>
+        <input
+          id="walletInput"
+          type="text"
+          placeholder="0x..."
+          spellcheck="false"
+          autocomplete="off"
+        />
+        <button id="analyzeBtn" onclick="startAnalysis()">ANALYZE →</button>
+      </div>
+    </div>
+
+    <div class="api-row">
+      <span class="api-label">API KEY</span>
+      <input
+        id="apiKeyInput"
+        type="password"
+        placeholder="cs_live_..."
+        spellcheck="false"
+        autocomplete="off"
+      />
+    </div>
+
+    <div id="statusBar" class="hidden">
+      <div class="spinner"></div>
+      <span id="statusText">Submitting analysis job...</span>
+    </div>
+
+    <div id="errorBox"></div>
+  </div>
+</section>
+
+<!-- ── Features Section ── -->
+<section class="features-section">
+  <div class="wrap">
+
+    <!-- Stats bar -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-big">50+</div>
+        <div class="stat-desc">Sanctioned Addresses</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-big">3</div>
+        <div class="stat-desc">Hop Graph Depth</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-big">5</div>
+        <div class="stat-desc">AML Pattern Detectors</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <div class="stat-big">v2.1</div>
+        <div class="stat-desc">Engine Version</div>
+      </div>
+    </div>
+
+    <!-- Feature cards -->
+    <div class="feature-grid">
+
+      <div class="feature-card">
+        <div class="feature-icon">⚖️</div>
+        <div class="feature-title">Sanctions Screening</div>
+        <div class="feature-body">
+          Cross-references every wallet against the OFAC SDN List, EU Consolidated Sanctions, and confirmed exploit addresses. Updated continuously.
+        </div>
+        <div class="feature-tags">
+          <span class="ftag">OFAC SDN</span>
+          <span class="ftag">EU LIST</span>
+          <span class="ftag">UN SECURITY</span>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🕸️</div>
+        <div class="feature-title">Multi-Hop Graph Analysis</div>
+        <div class="feature-body">
+          Traces fund flows across up to 3 hops in the transaction graph. Detects indirect contamination even when funds are routed through intermediaries.
+        </div>
+        <div class="feature-tags">
+          <span class="ftag">3-HOP DEPTH</span>
+          <span class="ftag">GRAPH TRAVERSAL</span>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Behavioral AML Patterns</div>
+        <div class="feature-body">
+          Detects structuring (smurfing), rapid transaction bursts, layering fan-outs, and dormant-then-active wallet reactivation — all key AML red flags.
+        </div>
+        <div class="feature-tags">
+          <span class="ftag">STRUCTURING</span>
+          <span class="ftag">LAYERING</span>
+          <span class="ftag">SMURFING</span>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔌</div>
+        <div class="feature-title">REST API Integration</div>
+        <div class="feature-body">
+          Embed CryptoShield directly into your platform via our documented REST API. Async job processing, rate limiting, and structured JSON responses included.
+        </div>
+        <div class="feature-tags">
+          <span class="ftag">REST API</span>
+          <span class="ftag">JSON</span>
+          <span class="ftag">ASYNC</span>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <div class="feature-title">Compliance Reports</div>
+        <div class="feature-body">
+          Every analysis produces a structured report with risk score, verdict, finding details, and a specific compliance recommendation — ready for your legal team.
+        </div>
+        <div class="feature-tags">
+          <span class="ftag">SAR READY</span>
+          <span class="ftag">AML POLICY</span>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">MiCA Ready</div>
+        <div class="feature-body">
+          Built with EU's Markets in Crypto-Assets regulation in mind. Helps platforms meet reporting obligations and avoid regulatory penalties under MiCA.
+        </div>
+        <div class="feature-tags">
+          <span class="ftag">MiCA</span>
+          <span class="ftag">EU COMPLIANT</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- How it works -->
+    <div class="how-title">HOW IT WORKS</div>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-num">01</div>
+        <div class="how-text">
+          <div class="how-step-title">Submit Wallet</div>
+          <div class="how-step-body">Enter any Ethereum address. The analysis job is submitted instantly and runs in the background.</div>
+        </div>
+      </div>
+      <div class="how-arrow">→</div>
+      <div class="how-step">
+        <div class="how-num">02</div>
+        <div class="how-text">
+          <div class="how-step-title">Deep Analysis</div>
+          <div class="how-step-body">CryptoShield fetches on-chain data, runs sanctions screening, traces the transaction graph, and detects behavioral patterns.</div>
+        </div>
+      </div>
+      <div class="how-arrow">→</div>
+      <div class="how-step">
+        <div class="how-num">03</div>
+        <div class="how-text">
+          <div class="how-step-title">Take Action</div>
+          <div class="how-step-body">Receive a risk score, verdict, and specific compliance recommendation. Export as JSON for your compliance system.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Result ── -->
+<section id="result">
+
+  <!-- Header -->
+  <div class="result-header">
+    <div class="verdict-block">
+      <div class="verdict-icon" id="verdictIcon"></div>
+      <div class="verdict-text">
+        <h2 id="verdictTitle"></h2>
+        <p id="verdictAddress"></p>
+      </div>
+    </div>
+    <div class="score-block">
+      <div class="score-number" id="scoreNumber"></div>
+      <div class="score-label">RISK SCORE / 100</div>
+    </div>
+  </div>
+
+  <!-- Score bar -->
+  <div class="score-bar-wrap">
+    <div class="score-bar-fill" id="scoreBar" style="width:0%"></div>
+  </div>
+
+  <!-- Panels -->
+  <div class="panels">
+
+    <!-- Overview -->
+    <div class="panel">
+      <div class="panel-title">Wallet Overview</div>
+      <div id="overviewContent"></div>
+    </div>
+
+    <!-- Recommendation -->
+    <div class="panel">
+      <div class="panel-title">Compliance Action</div>
+      <div class="recommendation" id="recommendationBox"></div>
+    </div>
+
+    <!-- Direct Sanctions -->
+    <div class="panel panel-full">
+      <div class="panel-title">Direct Sanctions Screening</div>
+      <div id="directContent"></div>
+    </div>
+
+    <!-- Indirect Connections -->
+    <div class="panel panel-full">
+      <div class="panel-title">Multi-Hop Graph Analysis</div>
+      <div id="indirectContent"></div>
+    </div>
+
+    <!-- Behavioral -->
+    <div class="panel panel-full">
+      <div class="panel-title">Behavioral Pattern Analysis</div>
+      <div id="behaviorContent"></div>
+    </div>
+
+  </div>
+
+  <div class="disclaimer" id="disclaimerBox"></div>
+
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="wrap">
+    CRYPTOSHIELD INTELLIGENCE PLATFORM &nbsp;·&nbsp;
+    OFAC SDN · EU CONSOLIDATED · UN SECURITY COUNCIL &nbsp;·&nbsp;
+    NOT LEGAL ADVICE
+  </div>
+</footer>
+
+<script>
+// ── Configuration ─────────────────────────────────────────────────────────────
+const CONFIG = Object.freeze({
+  API_BASE:        'http://localhost:8000',
+  POLL_INITIAL_MS: 5000,    // First poll after 5s
+  POLL_MAX_MS:     30000,   // Max interval: 30s (exponential backoff)
+  POLL_TIMEOUT_MS: 660000,  // Abort after 11 minutes
+});
+
+// ── State (module-scoped, not global) ─────────────────────────────────────────
+const state = {
+  pollTimer:    null,
+  timeoutTimer: null,
+  pollDelay:    CONFIG.POLL_INITIAL_MS,
+};
+
+// ── XSS-safe text helper ──────────────────────────────────────────────────────
+function safe(str) {
+  const d = document.createElement('div');
+  d.textContent = String(str ?? '');
+  return d.innerHTML;
+}
+
+// ── DOM helpers ───────────────────────────────────────────────────────────────
+function qs(id) { return document.getElementById(id); }
+
+function verdict(v) { return (v || 'low').toLowerCase(); }
+
+function showStatus(text) {
+  qs('statusBar').classList.remove('hidden');
+  qs('statusText').textContent = text;
+}
+
+function hideStatus() { qs('statusBar').classList.add('hidden'); }
+
+function showError(msg) {
+  qs('errorBox').textContent = '⚠ ' + msg;
+  qs('errorBox').classList.add('visible');
+}
+
+function hideError() { qs('errorBox').classList.remove('visible'); }
+
+function setButton(loading) {
+  qs('analyzeBtn').disabled    = loading;
+  qs('analyzeBtn').textContent = loading ? 'ANALYZING...' : 'ANALYZE →';
+}
+
+function stopPolling() {
+  if (state.pollTimer)    clearTimeout(state.pollTimer);
+  if (state.timeoutTimer) clearTimeout(state.timeoutTimer);
+  state.pollTimer    = null;
+  state.timeoutTimer = null;
+  state.pollDelay    = CONFIG.POLL_INITIAL_MS;
+}
+
+// ── Safe DOM node builders (no innerHTML for untrusted data) ──────────────────
+function makeStatRow(label, value) {
+  const row  = document.createElement('div');  row.className  = 'stat-row';
+  const key  = document.createElement('span'); key.className  = 'stat-key';  key.textContent = label;
+  const val  = document.createElement('span'); val.className  = 'stat-val';  val.textContent = value;
+  row.append(key, val);
+  return row;
+}
+
+function makeFinding(tierClass, tagClass, label, tagText, detail, hopNum) {
+  const wrap  = document.createElement('div');  wrap.className  = `finding ${tierClass}`;
+  const hdr   = document.createElement('div');  hdr.className   = 'finding-header';
+  const lbl   = document.createElement('span'); lbl.className   = 'finding-label';
+  const tag   = document.createElement('span'); tag.className   = `finding-tag ${tagClass}`; tag.textContent = tagText;
+  const det   = document.createElement('div');  det.className   = 'finding-detail'; det.textContent = detail;
+
+  if (hopNum != null) {
+    const hop = document.createElement('span'); hop.className = 'hop-badge'; hop.textContent = `HOP ${hopNum}`;
+    lbl.append(hop);
+  }
+  lbl.append(document.createTextNode(label));
+  hdr.append(lbl, tag);
+  wrap.append(hdr, det);
+  return wrap;
+}
+
+function makeEmpty(text) {
+  const el = document.createElement('div'); el.className = 'empty'; el.textContent = text;
+  return el;
+}
+
+// ── Submit analysis ───────────────────────────────────────────────────────────
+async function startAnalysis() {
+  const address = qs('walletInput').value.trim();
+  const apiKey  = qs('apiKeyInput').value.trim();
+
+  stopPolling();
+  hideError();
+  qs('result').classList.remove('visible');
+
+  if (!address.startsWith('0x') || address.length !== 42) {
+    showError('Invalid Ethereum address. Must start with 0x and be exactly 42 characters long.');
+    return;
+  }
+  if (!apiKey) {
+    showError('Please enter your API key.');
+    return;
+  }
+
+  setButton(true);
+  showStatus('Submitting analysis job...');
+
+  try {
+    const res = await fetch(`${CONFIG.API_BASE}/analyze`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+      body:    JSON.stringify({ address }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail?.error || `Server error (HTTP ${res.status})`);
+    }
+
+    const { job_id } = await res.json();
+    showStatus(`Job submitted. Running analysis — this takes 2–8 minutes.`);
+
+    // Start timeout watchdog
+    state.timeoutTimer = setTimeout(() => {
+      stopPolling();
+      hideStatus();
+      setButton(false);
+      showError('Analysis timed out after 11 minutes. Please try again.');
+    }, CONFIG.POLL_TIMEOUT_MS);
+
+    // Start first poll
+    scheduleNextPoll(job_id, apiKey);
+
+  } catch (err) {
+    hideStatus();
+    setButton(false);
+    showError(err.message || 'Could not reach the API. Is the server running on port 8000?');
+  }
+}
+
+// ── Exponential backoff polling ───────────────────────────────────────────────
+function scheduleNextPoll(jobId, apiKey) {
+  state.pollTimer = setTimeout(() => pollJob(jobId, apiKey), state.pollDelay);
+  // Double delay each time, cap at POLL_MAX_MS
+  state.pollDelay = Math.min(state.pollDelay * 2, CONFIG.POLL_MAX_MS);
+}
+
+async function pollJob(jobId, apiKey) {
+  try {
+    const res  = await fetch(`${CONFIG.API_BASE}/jobs/${jobId}`, {
+      headers: { 'X-API-Key': apiKey },
+    });
+
+    if (!res.ok) {
+      // Server returned an error — keep polling unless it's 404
+      if (res.status === 404) {
+        stopPolling();
+        hideStatus();
+        setButton(false);
+        showError('Job not found. The server may have restarted.');
+        return;
+      }
+      scheduleNextPoll(jobId, apiKey);
+      return;
+    }
+
+    const data = await res.json();
+
+    if (data.status === 'pending' || data.status === 'running') {
+      showStatus('Analyzing wallet — graph traversal in progress...');
+      scheduleNextPoll(jobId, apiKey);
+      return;
+    }
+
+    if (data.status === 'completed') {
+      stopPolling();
+      hideStatus();
+      setButton(false);
+      renderResult(data.result);
+      return;
+    }
+
+    if (data.status === 'failed') {
+      stopPolling();
+      hideStatus();
+      setButton(false);
+      showError(data.error || 'Analysis failed. Please try again.');
+    }
+
+  } catch (_) {
+    // Network blip — keep polling with backoff
+    showStatus('Connection interrupted — retrying...');
+    scheduleNextPoll(jobId, apiKey);
+  }
+}
+
+// ── Render result (XSS-safe — no untrusted innerHTML) ─────────────────────────
+function renderResult(r) {
+  const v     = verdict(r.risk.verdict);
+  const score = r.risk.score;
+  const icons = { critical: '🔴', high: '🔴', medium: '🟡', low: '🟢' };
+
+  // Verdict
+  qs('verdictIcon').className  = `verdict-icon ${v}`;
+  qs('verdictIcon').textContent = icons[v] || '⚪';
+  qs('verdictTitle').textContent = r.risk.verdict + ' RISK';
+  qs('verdictAddress').textContent = r.address;
+
+  // Score
+  const scoreEl = qs('scoreNumber');
+  scoreEl.textContent = score;
+  scoreEl.className   = `score-number ${v}`;
+
+  // Score bar
+  const bar = qs('scoreBar');
+  bar.className = `score-bar-fill ${v}`;
+  setTimeout(() => { bar.style.width = score + '%'; }, 50);
+
+  // Recommendation (trusted server text — still use textContent)
+  const recBox = qs('recommendationBox');
+  recBox.className   = `recommendation ${v}`;
+  recBox.textContent = r.recommendation;
+
+  // Overview — all via textContent
+  const ov = r.overview;
+  const overviewEl = qs('overviewContent');
+  overviewEl.innerHTML = '';
+  [
+    ['Transactions Analyzed', ov.tx_count.toLocaleString()],
+    ['First Activity',        ov.first_activity],
+    ['Last Activity',         ov.last_activity],
+    ['Wallet Age',            `${ov.wallet_age_days} days`],
+    ['Outgoing Volume',       ov.outgoing_volume_eth],
+    ['ETH Balance',           r.eth_balance],
+    ['Unique Counterparties', ov.counterparty_count.toLocaleString()],
+  ].forEach(([label, value]) => overviewEl.appendChild(makeStatRow(label, value)));
+
+  // Direct sanctions
+  const directEl = qs('directContent');
+  directEl.innerHTML = '';
+  if (!r.direct_sanctions.length) {
+    directEl.appendChild(makeEmpty('No direct matches with sanctioned or high-risk addresses.'));
+  } else {
+    r.direct_sanctions.forEach(f => directEl.appendChild(
+      makeFinding('sanctioned', 'sanctioned', f.label, f.source, `${f.counterparty} · ${f.date}`, null)
+    ));
+  }
+
+  // Indirect connections
+  const indirectEl = qs('indirectContent');
+  indirectEl.innerHTML = '';
+  if (!r.indirect_connections.length) {
+    indirectEl.appendChild(makeEmpty('No indirect connections found within 3 hops.'));
+  } else {
+    r.indirect_connections.forEach(f => indirectEl.appendChild(
+      makeFinding(
+        f.tier.toLowerCase(),
+        f.tier === 'SANCTIONED' ? 'sanctioned' : 'high',
+        f.label, f.source, f.address, f.hop
+      )
+    ));
+  }
+
+  // Behavioral patterns
+  const behaviorEl = qs('behaviorContent');
+  behaviorEl.innerHTML = '';
+  if (!r.behavioral_patterns.length) {
+    behaviorEl.appendChild(makeEmpty('No suspicious behavioral patterns detected.'));
+  } else {
+    r.behavioral_patterns.forEach(f => behaviorEl.appendChild(
+      makeFinding(
+        'behavior',
+        f.severity === 'HIGH' ? 'sanctioned' : 'high',
+        f.pattern_type.replace(/_/g, ' '),
+        f.severity,
+        f.description,
+        null
+      )
+    ));
+  }
+
+  // Disclaimer
+  qs('disclaimerBox').textContent = r.disclaimer;
+
+  // Show panel
+  qs('result').classList.add('visible');
+  qs('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Enter key support ─────────────────────────────────────────────────────────
+qs('walletInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startAnalysis();
+});
+</script>
+</body>
+</html>

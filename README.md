@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CryptoShield Intelligence Platform
 
 **Professional-grade wallet risk analysis for Ethereum.**
@@ -102,3 +103,7 @@ by a qualified AML/compliance professional.
 ## License
 
 MIT
+=======
+# cryptoshield
+Professional AML/KYC wallet risk analysis API
+>>>>>>> da2241261da038852b335ccfd030d4901e94bb5c
