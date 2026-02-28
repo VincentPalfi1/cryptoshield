@@ -1,0 +1,18 @@
+# Environment — NEVER commit this
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Reports (may contain sensitive data)
+report_*.json
+
+# IDE
+.vscode/
+.idea/
