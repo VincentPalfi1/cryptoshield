@@ -615,6 +615,108 @@
       margin-right: 8px;
     }
 
+    /* ── Request Access ── */
+    .request-btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 8px 14px;
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--accent);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s, color .15s;
+      flex-shrink: 0;
+    }
+
+    .request-btn:hover {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .request-form {
+      max-width: 680px;
+      margin: 14px auto 0;
+    }
+
+    .request-form.hidden { display: none; }
+
+    .request-inner {
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 24px;
+      animation: fadeUp .3s forwards;
+    }
+
+    .request-title {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-hi);
+      margin-bottom: 6px;
+    }
+
+    .request-sub {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-bottom: 18px;
+    }
+
+    .request-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .request-fields input {
+      background: var(--bg);
+      border: 1px solid var(--border-hi);
+      border-radius: 4px;
+      outline: none;
+      padding: 10px 14px;
+      font-family: var(--sans);
+      font-size: 13px;
+      color: var(--text-hi);
+      transition: border-color .2s;
+    }
+
+    .request-fields input:focus { border-color: var(--accent); }
+    .request-fields input::placeholder { color: var(--text-dim); }
+
+    .request-submit {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 20px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: opacity .15s;
+      margin-top: 4px;
+    }
+
+    .request-submit:hover { opacity: 0.85; }
+
+    .request-success {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--green);
+      margin-top: 14px;
+      padding: 12px 16px;
+      border: 1px solid var(--green);
+      border-radius: 4px;
+      background: var(--green-dim);
+    }
+
+    .request-success.hidden { display: none; }
+
     /* ── Features Section ── */
     .features-section {
       position: relative; z-index: 1;
@@ -838,6 +940,24 @@
         spellcheck="false"
         autocomplete="off"
       />
+      <button class="request-btn" onclick="toggleRequestForm()">REQUEST ACCESS</button>
+    </div>
+
+    <!-- Request Access Form -->
+    <div id="requestForm" class="request-form hidden">
+      <div class="request-inner">
+        <div class="request-title">Request API Access</div>
+        <div class="request-sub">Free 30-day pilot. No credit card required.</div>
+        <div class="request-fields">
+          <input id="reqName" type="text" placeholder="Your name" autocomplete="off" />
+          <input id="reqEmail" type="email" placeholder="Work email" autocomplete="off" />
+          <input id="reqProject" type="text" placeholder="Your project / company" autocomplete="off" />
+          <button class="request-submit" onclick="submitRequest()">GET ACCESS &rarr;</button>
+        </div>
+        <div id="requestSuccess" class="request-success hidden">
+          &#10003; Request received &mdash; we&apos;ll be in touch within 24 hours.
+        </div>
+      </div>
     </div>
 
     <div id="statusBar" class="hidden">
@@ -1345,6 +1465,31 @@ function renderResult(r) {
   // Show panel
   qs('result').classList.add('visible');
   qs('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Request Access ───────────────────────────────────────────────────────────────
+function toggleRequestForm() {
+  const form = qs('requestForm');
+  form.classList.toggle('hidden');
+}
+
+async function submitRequest() {
+  const name    = qs('reqName').value.trim();
+  const email   = qs('reqEmail').value.trim();
+  const project = qs('reqProject').value.trim();
+
+  if (!name || !email || !project) {
+    alert('Please fill in all fields.');
+    return;
+  }
+
+  const res = await fetch('https://formspree.io/f/mojnzlyg', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+  body: JSON.stringify({ name, email, project }),
+});
+qs('requestSuccess').classList.remove('hidden');
+  qs('requestSuccess').classList.remove('hidden');
 }
 
 // ── Enter key support ─────────────────────────────────────────────────────────
